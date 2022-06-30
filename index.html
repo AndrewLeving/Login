@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div id="app" v-cloak>
+        <div class="page" v-if="page=='login'">
+            <h1>Login</h1>
+            <p>{{accountMessage}}</p>
+            Email: <input placeholder="Email" type="text" v-model="loginEmail">
+            Password: <input placeholder="Password" type="password" v-model="loginPassword">
+            <button @click="postSession()">Login</button>
+            <p>{{ errorMessage }}</p>
+            <button @click="goToSignUp()">Sign Up</button>
+        </div>
+
+        <div class="page" v-if="page=='signup'">
+            <h1>Create an Account</h1>
+            Username: <input placeholder="Username" type="text" v-model="newUsername">
+            Email: <input placeholder="Email" type="text" v-model="newEmail">
+            Password: <input placeholder="Password" type="password" v-model="newPassword">
+            <button @click="postUser()">Create Account</button>
+            <p>{{ errorMessage }}</p>
+            <button @click="goToLogin()">Return to Login</button>
+        </div>
+
+        <div class="home-page" v-if="page=='home'">
+            <h1>Forum App!</h1>
+            <thread-preview v-for="thread in threadList" :thread="thread" @go="goToThread(thread._id)">
+            </thread-preview>
+        </div>
+
+        <div class="thread-page" v-if="page=='thread'">
+            <div class="thread-preview">
+                <div class="thread-preview-header">
+                    <h1> {{ activeThread.name }} </h1>
+                    <h3> {{ activeThread.category }} </h3>
+                </div>
+                <p> {{ activeThread.description }} </p>
+            </div>
+            <div class="posts">
+                <post v-for="post in activeThread.posts" :post="post"></post>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
+    <script src="app.js"></script>
+</body>
+
+</html>
