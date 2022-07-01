@@ -33,22 +33,43 @@
 
         <div class="home-page" v-if="page=='home'">
             <h1>Forum App!</h1>
+            <button @click="goToNewThread()">Create New Thread</button>
             <thread-preview v-for="thread in threadList" :thread="thread" @go="goToThread(thread._id)">
             </thread-preview>
         </div>
 
+        <div class="page" v-if="page=='newThread'">
+            <button @click="goToHome()">Return to Main Page</button>
+            <h1>Create a New Thread</h1>
+            <div class="new-thread-header">
+                Thread Name: <input v-model="newThreadName">
+                Thread Category: <input v-model="newThreadCat">
+            </div>
+            Thread Description: <input class="large-input" v-model="newThreadDesc">
+            {{errorMessage}}
+            <button @click="postThread()">Post Thread</button>
+        </div>
+
         <div class="thread-page" v-if="page=='thread'">
+            <button @click="goToHome()">Return to Home</button>
             <div class="thread-preview">
                 <div class="thread-preview-header">
                     <h1> {{ activeThread.name }} </h1>
                     <h3> {{ activeThread.category }} </h3>
                 </div>
                 <p> {{ activeThread.description }} </p>
-            </div>
-            <div class="posts">
-                <post v-for="post in activeThread.posts" :post="post"></post>
+                <p> {{ fullname }}</p>
+                <div class="posts">
+                    <post v-for="post in activeThread.posts" :post="post" @deletecomment="deletePost(post._id)"></post>
+                </div>
+                <div class="comment">
+                    <input class="large-input" v-model="comment">
+                    <button @click="postPost()">Submit</button>
+                    {{errorMessage}}
+                </div>
             </div>
         </div>
+
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>

@@ -22,9 +22,16 @@ Vue.component('post', {
         <p> {{ post.body }} </p>
         <div class="post-footer">
             <h3> {{ post.user.fullname }} </h3>
+            <button @click="deletePost()">Delete Comment</button>
+            <p> {{ post.errorMessage }} </p>
         </div>
     </div>`,
     props: ['post'],
+    methods: {
+        deletePost: function () {
+            this.$emit('deletecomment')
+        }
+    },
 });
 
 var app = new Vue({
@@ -42,7 +49,15 @@ var app = new Vue({
         accountMessage: "",
 
         threadList: [],
-        activeThread: {},
+        activeThread: {
+            fullname: "",
+        },
+
+        newThreadName: "",
+        newThreadCat: "",
+        newThreadDesc: "",
+
+        comment: "",
     },
     methods: {
 
@@ -90,8 +105,7 @@ var app = new Vue({
                 this.loginEmail = "";
                 this.loginPassword = "";
                 this.errorMessage = "";
-                this.page = "home"
-                this.getThread();
+                this.goToHome();
             }
             else if (response.status == 401) {
                 //not logged in
@@ -146,6 +160,9 @@ var app = new Vue({
             if (response.status == 200) {
                 let data = await response.json();
                 this.threadList = data;
+                this.threadList.forEach(thread => {
+                    thread.errorMessage = "";
+                });
             }
             else {
                 this.threadList = ["ERROR FETCHING THREAD DATA"]
@@ -159,9 +176,79 @@ var app = new Vue({
             if (response.status == 200) {
                 let data = await response.json();
                 this.activeThread = data;
+                this.activeThread.posts.forEach(post => {
+                    post.errorMessage = "";
+                })
             }
             else {
                 this.activeThread = ["ERROR FETCHING THREAD DATA"]
+            }
+        },
+        postThread: async function () {
+            let newThread = {
+                name: this.newThreadName,
+                category: this.newThreadCat,
+                description: this.newThreadDesc,
+            };
+            let response = await fetch(`${URL}/thread`, {
+                method: "POST",
+                body: JSON.stringify(newThread),
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                credentials: "include",
+            });
+            if (response.status == 201) {
+                let data = await response.json();
+                this.goToThread(data._id);
+            }
+            else {
+                let body = await response.json();
+                this.errorMessage = body.error.message;
+                console.log(newThread);
+            }
+        },
+        postPost: async function () {
+            let newPost = {
+                body: this.comment,
+                thread_id: this.activeThread._id,
+            }
+            let response = await fetch(`${URL}/post`, {
+                method: "POST",
+                body: JSON.stringify(newPost),
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                credentials: "include",
+            });
+            if (response.status == 201) {
+                let data = await response.json();
+                this.goToThread(data.thread_id);
+            }
+            else {
+                let body = await response.json();
+                this.errorMessage = body.error.message;
+            }
+        },
+        deletePost: async function (id) {
+            let currentPost = {};
+            this.activeThread.posts.forEach(post => {
+                if (post._id == id) {
+                    currentPost = post;
+                }
+            })
+
+            let response = await fetch(`${URL}/thread/${this.activeThread._id}/post/${id}`, {
+                method: "DELETE",
+                credentials: "include",
+            });
+            if (response.status == 200) {
+                let data = await response.json();
+                this.goToThread(data.thread_id);
+            }
+            else {
+                let body = await response.json();
+                currentPost.errorMessage = "You may only delete comments that you posted.";
             }
         },
 
@@ -178,11 +265,31 @@ var app = new Vue({
             this.newEmail = "";
             this.newPassword = "";
         },
-        goToThread: function (id) {
-            this.getThreadID(id);
+        goToThread: async function (id) {
+            await this.getThreadID(id);
             this.page = "thread";
+            this.comment = ""
+            this.errorMessage = '';
+        },
+        goToHome: function () {
+            this.getThread();
+            this.errorMessage = '';
+            this.activeThread = {};
+            this.page = "home"
+            this.newThreadName = "";
+            this.newThreadCat = "";
+            this.newThreadDesc = "";
+        },
+        goToNewThread: function () {
+            this.page = "newThread"
+            this.errorMessage = '';
         }
 
+    },
+    computed: {
+        fullname: function () {
+            return this.activeThread.user.fullname
+        }
     },
     created: function () {
         this.getSession();

@@ -41,7 +41,7 @@
     justify-content: space-between;
     height: 4rem;
     align-items: center;
-    text-align: center;
+    text-align: left;
 }
 
 .thread-preview-header h1 {
@@ -77,6 +77,9 @@
     grid-template-columns: repeat(10, 10%);
 }
 
-.thread-page h1 {
-    grid-area: 1/2/2/9
+.thread-page button {
+    grid-area: 1/2/2/3;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
