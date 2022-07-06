@@ -1,4 +1,4 @@
-const URL = "https://forum2022.codeschool.cloud"
+const URL = "http://localhost:8080"
 
 Vue.component('thread-preview', {
     template: `<div class="thread-preview">
@@ -129,7 +129,7 @@ var app = new Vue({
                 password: this.newPassword
             };
 
-            let response = await fetch(`${URL}/user`, {
+            let response = await fetch(`${URL}/users`, {
                 method: "POST",
                 body: JSON.stringify(loginCreds),
                 headers: {
