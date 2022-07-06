@@ -77,12 +77,12 @@ app.get("/thread/:id", async (req, res) => {
     } catch (err) {
         console.log(`Could not find ${thread.user_id} in thread ${thread._id}: ${err}`)
     }
-    for (let p in thread) {
+    for (let p in thread.posts) {
         try {
-            let postUser = await User.findById(thread[p].user_id);
-            thread[p].user = postUser;
+            let postUser = await User.findById(thread.posts[p].user_id, "-password");
+            thread.posts[p].user = postUser;
         } catch (err) {
-            console.log(`Could not find ${thread[p].user_id} in post ${thread[p]._id}: ${err}`)
+            console.log(`Could not find ${thread.posts[p].user_id} in post ${thread.posts[p]._id}: ${err}`)
         }
     }
     res.status(200).json(thread);
@@ -111,8 +111,45 @@ app.post("/thread", async (req, res) => {
     }
 });
 
-app.post("/post", (req, res) => {
-    console.log("post/post");
+app.post("/post", async (req, res) => {
+    if (!req.user) {
+        res.status(401).json({ message: "unauthed" });
+        return;
+    }
+
+    let thread;
+
+    try {
+        thread = await Thread.findByIdAndUpdate(
+            req.body.thread_id,
+            {
+                $push: {
+                    posts: {
+                        user_id: req.user.id,
+                        body: req.body.body,
+                        thread_id: req.body.thread_id
+                    }
+                }
+            },
+            {
+                new: true
+            }
+        );
+        if (!thread) {
+            res.status(404).json({
+                message: "thread not found",
+                id: req.body.thread_id,
+            });
+            return;
+        }
+    } catch (err) {
+        res.status(500).json({
+            message: "failed to insert post",
+            error: err,
+        });
+        return;
+    }
+    res.status(201).json(thread.posts[thread.posts.length - 1]);
 });
 
 app.delete("/thread/:threadid/post/:postid", (req, res) => {
