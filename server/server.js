@@ -30,8 +30,25 @@ app.post("/users", async (req, res) => {
     }
 });
 
-app.get("/thread", (req, res) => {
-    console.log("get/thread");
+app.get("/thread", async (req, res) => {
+    try {
+        threads = await Thread.find({}, "-posts");
+    } catch (err) {
+        res.status(500).json({
+            message: `could not get threads`,
+            error: err,
+        });
+    }
+    for (let k in threads) {
+        try {
+            threads[k] = threads[k].toObject();
+            let user = await User.findById(threads[k].user_id);
+            threads[k].user = user;
+        } catch (err) {
+            console.log(`Could not find ${threads[k].user_id} in thread ${threads[k]._id}: ${err}`)
+        }
+    };
+    res.status(200).json(threads);
 });
 
 app.get("/thread/:id", (req, res) => {
