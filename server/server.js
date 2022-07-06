@@ -31,6 +31,7 @@ app.post("/users", async (req, res) => {
 });
 
 app.get("/thread", async (req, res) => {
+    let threads;
     try {
         threads = await Thread.find({}, "-posts");
     } catch (err) {
@@ -38,11 +39,12 @@ app.get("/thread", async (req, res) => {
             message: `could not get threads`,
             error: err,
         });
+        return;
     }
     for (let k in threads) {
         try {
             threads[k] = threads[k].toObject();
-            let user = await User.findById(threads[k].user_id);
+            let user = await User.findById(threads[k].user_id, "-password");
             threads[k].user = user;
         } catch (err) {
             console.log(`Could not find ${threads[k].user_id} in thread ${threads[k]._id}: ${err}`)
@@ -51,8 +53,39 @@ app.get("/thread", async (req, res) => {
     res.status(200).json(threads);
 });
 
-app.get("/thread/:id", (req, res) => {
-    console.log("thread/id");
+app.get("/thread/:id", async (req, res) => {
+    let thread;
+    try {
+        thread = await Thread.findById(req.params.id);
+        if (!thread) {
+            res.status(404).json({
+                message: "Thread not found"
+            });
+            return;
+        }
+    } catch (err) {
+        res.status(500).json({
+            message: `Error getting thread:${req.params.id}`,
+            error: err
+        })
+        return;
+    }
+    try {
+        thread = thread.toObject();
+        let user = await User.findById(thread.user_id, "-password");
+        thread.user = user;
+    } catch (err) {
+        console.log(`Could not find ${thread.user_id} in thread ${thread._id}: ${err}`)
+    }
+    for (let p in thread) {
+        try {
+            let postUser = await User.findById(thread[p].user_id);
+            thread[p].user = postUser;
+        } catch (err) {
+            console.log(`Could not find ${thread[p].user_id} in post ${thread[p]._id}: ${err}`)
+        }
+    }
+    res.status(200).json(thread);
 });
 
 app.post("/thread", async (req, res) => {
