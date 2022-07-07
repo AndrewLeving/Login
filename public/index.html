@@ -34,7 +34,8 @@
         <div class="home-page" v-if="page=='home'">
             <h1>Forum App!</h1>
             <button @click="goToNewThread()">Create New Thread</button>
-            <thread-preview v-for="thread in threadList" :thread="thread" @go="goToThread(thread._id)">
+            <thread-preview v-for="thread in threadList" :thread="thread" @go="goToThread(thread._id)"
+                @remove="deleteThread(thread._id)">
             </thread-preview>
         </div>
 
@@ -56,6 +57,8 @@
                 <div class="thread-preview-header">
                     <h1> {{ activeThread.name }} </h1>
                     <h3> {{ activeThread.category }} </h3>
+                    <button @click="patchThreadStatus(!activeThread.open)">Toggle Thread Status</button>
+                    <p> {{ activeThread.open }} </p>
                 </div>
                 <p> {{ activeThread.description }} </p>
                 <p> {{ fullname }}</p>

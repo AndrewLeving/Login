@@ -2,16 +2,20 @@ const URL = "http://localhost:8080"
 
 Vue.component('thread-preview', {
     template: `<div class="thread-preview">
-    <div class="thread-preview-header">
-        <h1 @click="goToThread()"> {{ thread.name }} </h1>
-        <h3> {{ thread.category }} </h3>
-    </div>
-    <p> {{ thread.description }} </p>
+        <div class="thread-preview-header">
+            <h1 @click="goToThread()"> {{ thread.name }} </h1>
+            <h3> {{ thread.category }} </h3>
+            <button @click="remove()">Delete</button>
+        </div>
+        <p> {{ thread.description }} </p>
     </div>`,
     props: ['thread'],
     methods: {
         goToThread: function () {
             this.$emit('go')
+        },
+        remove: function () {
+            this.$emit('remove')
         }
     }
 });
@@ -237,18 +241,46 @@ var app = new Vue({
                     currentPost = post;
                 }
             })
-
             let response = await fetch(`${URL}/thread/${this.activeThread._id}/post/${id}`, {
                 method: "DELETE",
                 credentials: "include",
             });
             if (response.status == 200) {
                 let data = await response.json();
-                this.goToThread(data.thread_id);
+                this.goToThread(data._id);
             }
             else {
                 let body = await response.json();
-                currentPost.errorMessage = "You may only delete comments that you posted.";
+                currentPost.errorMessage = body;
+            }
+        },
+        deleteThread: async function (id) {
+            let response = await fetch(`${URL}/thread/${id}`, {
+                method: "DELETE",
+                credentials: "include",
+            });
+            if (response.status == 200) {
+                let data = await response.json();
+                this.goToHome();
+            }
+            else {
+                let body = await response.json();
+                currentPost.errorMessage = body;
+            }
+        },
+
+        patchThreadStatus: async function (closeBool) {
+            let response = await fetch(`${URL}/thread/${this.activeThread._id}/${closeBool}`, {
+                method: "PATCH",
+                credentials: "include",
+            });
+            if (response.status == 200) {
+                let data = await response.json();
+                this.goToThread(data._id);
+            }
+            else {
+                let body = await response.json();
+                errorMessage = body;
             }
         },
 

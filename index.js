@@ -1,5 +1,6 @@
 const app = require("./server/server");
 const { connect, onConnect } = require("./persist/connect");
+const { checkClosed } = require("./server/threadCloser");
 
 // put in command line flags
 const flags = require("flags");
@@ -23,3 +24,5 @@ try {
     console.log(err);
     throw "couldnt start"
 }
+
+checkClosed(30000);
